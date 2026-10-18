@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Webcam Capture</title>
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app" class="app">
+
+    <!-- ─────────────────────────── Araç çubuğu (macOS Titlebar) ─────────────────────────── -->
+    <header class="toolbar">
+      <div class="toolbar-left">
+        <!-- macOS Trafik Işıkları -->
+        <div class="macos-traffic-lights" aria-hidden="true">
+          <span class="traffic-dot dot-close" title="Kapat"></span>
+          <span class="traffic-dot dot-minimize" title="Simge Durumuna Küçült"></span>
+          <span class="traffic-dot dot-zoom" title="Büyüt"></span>
+        </div>
+        <div class="app-brand">
+          <span class="app-icon">
+            <img src="icon.png" alt="logo" width="24" height="24">
+          </span>
+          <div class="app-meta">
+            <span class="app-title">Webcam Capture</span>
+            <span class="app-subtitle" id="resLabel">133 × 171 px · 35×45 mm</span>
+          </div>
+        </div>
+      </div>
+      <div class="toolbar-center">
+        <div class="segmented" role="group" aria-label="Kamera">
+          <button class="seg-btn" data-side="start" id="btnStart">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+            Başlat
+          </button>
+          <button class="seg-btn" data-side="stop" id="btnStop">
+            <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor"><rect x="3.5" y="3.5" width="9" height="9" rx="1.5"/></svg>
+            Durdur
+          </button>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <button class="tool-btn" id="btnToolbarMonitor" title="Hedef görüntüyü ikinci monitörde / ayrı pencerede aç">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+            <path d="M0 3.5A1.5 1.5 0 0 1 1.5 2h13A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 12.5v-9zM1.5 3a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-13z"/>
+            <path d="M6 14h4v1H6z"/>
+          </svg>
+          İkinci Ekran
+        </button>
+        <button class="tool-btn" id="btnFolder">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2H6l1.2 1.5h6.3A1.5 1.5 0 0 1 15 5v7.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9z"/></svg>
+          Klasörü Aç
+        </button>
+        <button class="tool-btn" id="btnSettings">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M8 4.75a3.25 3.25 0 1 1 0 6.5 3.25 3.25 0 0 1 0-6.5zM8 2c.36 0 .71.03 1.05.09l.4-1.02a1 1 0 0 1 1.62-.44l.87.76.98-.64a1 1 0 0 1 1.37.34l.55.9a1 1 0 0 1-.16 1.36l-.79.64c.06.35.1.7.1 1.06s-.04.71-.1 1.06l.79.64a1 1 0 0 1 .16 1.36l-.55.9a1 1 0 0 1-1.37.34l-.98-.64-.87.76a1 1 0 0 1-1.62-.44l-.4-1.02A8.4 8.4 0 0 1 8 10a8.4 8.4 0 0 1-1.05-.09l-.4 1.02a1 1 0 0 1-1.62.44l-.87-.76-.98.64a1 1 0 0 1-1.37-.34l-.55-.9a1 1 0 0 1 .16-1.36l.79-.64A6.2 6.2 0 0 1 2.5 6c0-.36.04-.71.1-1.06l-.79-.64a1 1 0 0 1-.16-1.36l.55-.9a1 1 0 0 1 1.37-.34l.98.64.87-.76a1 1 0 0 1 1.62.44l.4 1.02A8.4 8.4 0 0 1 8 2z"/></svg>
+          Ayarlar
+        </button>
+      </div>
+    </header>
+
+    <!-- ───────────────────────────── İçerik ───────────────────────────── -->
+    <main class="content">
+      <!-- Canlı kamera -->
+      <section class="live-pane">
+        <div class="pane-head">
+          <div class="pane-title-group">
+            <span class="pane-title">Canlı Kamera Vizörü</span>
+            <span class="live-status-pill hidden" id="livePill">
+              <span class="pill-dot"></span>
+              <span class="pill-text">CANLI</span>
+            </span>
+          </div>
+          <span class="badge" id="camBadge">kapalı</span>
+        </div>
+        <div class="live-stage" id="liveStage">
+          <!-- Fotoğraf Flaş Efekti -->
+          <div class="camera-flash" id="cameraFlash"></div>
+
+          <!-- Modern Vizör Köşeleri -->
+          <div class="viewfinder-corners">
+            <span class="vf-corner vf-tl"></span>
+            <span class="vf-corner vf-tr"></span>
+            <span class="vf-corner vf-bl"></span>
+            <span class="vf-corner vf-br"></span>
+          </div>
+
+          <img id="liveImg" alt="kamera" class="live-img hidden">
+          <div class="live-empty" id="liveEmpty">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v10H3z"/><path d="M14 10l5-2v8l-5-2"/></svg>
+            </div>
+            <div class="empty-text">Kamera Kapalı</div>
+            <div class="empty-sub">Çekime başlamak için yukarıdaki <strong>Başlat</strong> butonuna basın</div>
+          </div>
+        </div>
+
+        <!-- Sarı çerçeve yakınlaştırma kontrol çubuğu -->
+        <div class="zoom-toolbar" id="zoomToolbar">
+          <div class="zoom-label-group">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+            <span class="zoom-title">Sarı Çerçeve Yakınlaştırma</span>
+          </div>
+          <div class="zoom-controls">
+            <button type="button" class="zoom-btn" id="btnZoomOut" title="Uzaklaştır (Çerçeveyi genişlet) [ - ]" aria-label="Uzaklaştır">
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                <path d="M3 8a.75.75 0 0 1 .75-.75h8.5a.75.75 0 0 1 0 1.5h-8.5A.75.75 0 0 1 3 8z"/>
+              </svg>
+            </button>
+            <div class="zoom-slider-container">
+              <input type="range" id="zoomSlider" min="0.5" max="2.5" step="0.05" value="1.0" title="Sarı çerçeveyi yakınlaştır / uzaklaştır">
+            </div>
+            <button type="button" class="zoom-btn" id="btnZoomIn" title="Yakınlaştır (Çerçeveyi daralt) [ + ]" aria-label="Yakınlaştır">
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                <path d="M8 3a.75.75 0 0 1 .75.75v3.5h3.5a.75.75 0 0 1 0 1.5h-3.5v3.5a.75.75 0 0 1-1.5 0v-3.5h-3.5a.75.75 0 0 1 0-1.5h3.5v-3.5A.75.75 0 0 1 8 3z"/>
+              </svg>
+            </button>
+            <button type="button" class="zoom-badge-btn" id="btnZoomReset" title="Sıfırla (1.0x)">
+              <span id="zoomBadge">1.0x</span>
+            </button>
+          </div>
+          <span class="zoom-hint">Tekerlek veya +/-</span>
+        </div>
+
+        <!-- Yüz Takibi ve Algılama Sıklığı Kontrol Çubuğu -->
+        <div class="face-toolbar" id="faceToolbar">
+          <div class="face-toggle-group">
+            <button type="button" class="face-toggle-btn active" id="btnQuickFace" title="Yüz algılama ve biyometrik ortalamayı aç / kapat (Kısayol: F)">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 13a6 6 0 1 1 0-12 6 6 0 0 1 0 12z"/>
+                <path d="M5.5 6.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm5 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm-5.465 4.035a.5.5 0 0 1 .707-.07 3.5 3.5 0 0 0 4.516 0 .5.5 0 1 1 .632.776 4.5 4.5 0 0 1-5.785 0 .5.5 0 0 1-.07-.706z"/>
+              </svg>
+              <span id="quickFaceLabel">Yüz Takibi: Açık</span>
+            </button>
+          </div>
+
+          <div class="face-freq-controls" id="faceFreqControls">
+            <span class="freq-label" title="Yüz bulma sıklığı: Kaç karede bir taranacağı">Yüz Bulma Sıklığı:</span>
+            <div class="freq-stepper">
+              <button type="button" class="freq-btn" id="btnEveryDec" title="Sıklığı artır (Kare sayısını azalt, daha sık tara)">
+                <svg viewBox="0 0 16 16" width="11" height="11" fill="currentColor"><path d="M3 8a.75.75 0 0 1 .75-.75h8.5a.75.75 0 0 1 0 1.5h-8.5A.75.75 0 0 1 3 8z"/></svg>
+              </button>
+              <span class="freq-badge" id="quickEveryBadge" title="Kaç karede bir yüz aranacağı">Her 3 karede 1</span>
+              <button type="button" class="freq-btn" id="btnEveryInc" title="Sıklığı azalt (Kare sayısını artır, daha seyrek tara)">
+                <svg viewBox="0 0 16 16" width="11" height="11" fill="currentColor"><path d="M8 3a.75.75 0 0 1 .75.75v3.5h3.5a.75.75 0 0 1 0 1.5h-3.5v3.5a.75.75 0 0 1-1.5 0v-3.5h-3.5a.75.75 0 0 1 0-1.5h3.5v-3.5A.75.75 0 0 1 8 3z"/></svg>
+              </button>
+            </div>
+            <div class="freq-chips">
+              <button type="button" class="freq-chip" data-every="1" title="Her karede ara (En hızlı / Ultra akıcı)">1 (Akıcı)</button>
+              <button type="button" class="freq-chip active" data-every="3" title="3 karede bir ara (Dengeli)">3 (Önerilen)</button>
+              <button type="button" class="freq-chip" data-every="6" title="6 karede bir ara (Tasarruflu)">6 (Hafif)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pane-foot" id="faceLine">—</div>
+      </section>
+
+      <!-- Sağ panel -->
+      <aside class="side">
+        <section class="card target-card">
+          <div class="pane-head pane-head-split">
+            <div class="pane-head-left">
+              <span class="pane-title">Hedef Görüntü</span>
+              <span class="badge accent" id="targetLabel">133 × 171</span>
+            </div>
+            <button type="button" class="btn-popout" id="btnOpenTargetWindow" title="Hedef görüntüyü ikinci monitörde / ayrı pencerede aç">
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                <path d="M14 2.5a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0 0 1h2.793L7.146 8.146a.5.5 0 1 0 .708.708L13 3.707V6.5a.5.5 0 0 0 1 0v-4z"/>
+                <path d="M3 3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3a.5.5 0 0 0-1 0v3a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3a.5.5 0 0 0 0-1H3z"/>
+              </svg>
+              <span>Ayrı Pencere</span>
+            </button>
+          </div>
+          <div class="target-stage">
+            <div class="target-frame-box" id="targetFrameBox">
+              <img id="targetImg" class="target-img visible" alt="hedef">
+              <div class="target-guide-overlay" id="targetGuideOverlay" title="Biyometrik hizalama kılavuzu">
+                <div class="bio-guide-line bio-crown" title="Tepe sınırı"></div>
+                <div class="bio-guide-line bio-eyes" title="Göz hizası"></div>
+                <div class="bio-guide-line bio-chin" title="Çene sınırı"></div>
+              </div>
+            </div>
+            <div class="target-empty visible" id="targetEmpty">—</div>
+          </div>
+          <div class="target-specs">
+            <span class="spec-tag">Standart: 35×45 mm</span>
+            <span class="spec-tag highlight" id="tagEdevlet">e-Devlet uyumlu</span>
+          </div>
+          <div class="pane-foot muted" id="targetMeta">format · klasör</div>
+        </section>
+
+        <!-- Resim İsmi Kartı -->
+        <section class="card name-card">
+          <div class="name-card-header">
+            <label for="filenameInput" class="name-card-title">Resim Dosya Adı</label>
+            <span class="name-card-hint">isteğe bağlı</span>
+          </div>
+          <div class="name-input-group">
+            <input
+              type="text"
+              id="filenameInput"
+              class="name-input"
+              placeholder="Örn: ahmet_vesikalik"
+              autocomplete="off"
+              spellcheck="false"
+              title="Kaydedilecek resme özel isim verin"
+            >
+            <span class="name-ext-badge" id="nameExtBadge">.png</span>
+            <button type="button" class="name-clear-btn hidden" id="filenameClear" title="Temizle" aria-label="Temizle">
+              <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06z"/>
+              </svg>
+            </button>
+          </div>
+        </section>
+
+        <button class="capture-btn" id="btnCapture" title="Biyometrik fotoğraf yakala (Space)">
+          <span class="shutter-circle">
+            <span class="shutter-inner"></span>
+          </span>
+          <span class="capture-text">Fotoğraf Yakala</span>
+        </button>
+        <span class="capture-hint">kısayol&nbsp;·&nbsp;<kbd>Space</kbd> veya <kbd>Enter</kbd></span>
+
+        <section class="card auto-card">
+          <div class="field toggle-field">
+            <span>Otomatik yakala</span>
+            <label class="switch" title="Otomatik yakalama">
+              <input type="checkbox" id="autoToggle">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="auto-row">
+            <span>Her</span>
+            <input type="number" id="intervalInput" min="0.5" max="3600" step="0.5" value="2">
+            <span>saniye</span>
+          </div>
+        </section>
+
+        <section class="card info-card">
+          <div class="info-row"><span>Kayıt</span><span class="strong" id="countLabel">0</span></div>
+          <div class="info-row"><span>Son dosya</span><span class="file" id="lastLabel">—</span></div>
+          <div class="info-row"><span>Klasör</span><span class="file" id="dirLabel">captures</span></div>
+        </section>
+      </aside>
+    </main>
+
+    <!-- ─────────────────────────── Durum çubuğu ─────────────────────────── -->
+    <footer class="statusbar">
+      <span class="status-dot" id="statusDot"></span>
+      <span class="status-text" id="statusText">Hazır.</span>
+      <span class="status-right" id="faceStatus">yüz modu kapalı</span>
+    </footer>
+
+  </div>
+
+  <!-- ─────────────────────────── Ayarlar paneli ─────────────────────────── -->
+  <div class="overlay hidden" id="settingsOverlay">
+    <div class="sheet" id="settingsSheet">
+      <div class="sheet-title">Ayarlar</div>
+      <div class="sheet-body">
+
+        <div class="field-group" data-title="Kamera ve çıktı">
+          <div class="field">
+            <label for="sCamera">Kamera seçimi</label>
+            <select id="sCamera">
+              <option value="0">Kamera taranıyor...</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="sCamRes">Kamera çekim netliği (çözünürlük)</label>
+            <select id="sCamRes">
+              <option value="auto">Otomatik (Kamera varsayılanı)</option>
+              <option value="1280x720">HD (1280 × 720) — Önerilen Netlik</option>
+              <option value="1920x1080">Full HD (1920 × 1080) — Yüksek Netlik</option>
+              <option value="640x480">Standart (640 × 480 VGA)</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="sWidth">Hedef Genişlik (px)</label>
+              <input type="number" id="sWidth" min="1" max="4096" value="133">
+            </div>
+            <div class="field">
+              <label for="sHeight">Hedef Yükseklik (px)</label>
+              <input type="number" id="sHeight" min="1" max="4096" value="171">
+            </div>
+          </div>
+          <div class="field">
+            <label for="sFormat">Kayıt formatı</label>
+            <select id="sFormat">
+              <option value="jpg">JPG (Kalite ayarlanabilir)</option>
+              <option value="png">PNG (Kayıpsız)</option>
+            </select>
+          </div>
+          <div class="field" id="fieldQuality">
+            <label for="sQuality">JPEG Kalitesi <em class="val" id="sQualityVal">%95</em></label>
+            <input type="range" id="sQuality" min="30" max="100" step="1" value="95">
+          </div>
+          <div class="field toggle-field">
+            <span>e-Devlet boyutu kısıtı (maks. 150 KB)</span>
+            <label class="switch" title="e-Devlet 20-150 KB aralığını zorunlu tut">
+              <input type="checkbox" id="sEdevlet" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="field">
+            <label for="sDir">Kayıt klasörü</label>
+            <div class="combine">
+              <input type="text" id="sDir" value="captures" placeholder="captures">
+              <button class="btn-mini" id="sDirBrowse">Seç…</button>
+            </div>
+          </div>
+          <div class="field-note">
+            e-Devlet standartları: <strong>35 × 45 mm</strong> · <strong>133 × 171 px</strong> ·
+            <strong>20–150 KB</strong>. Kısıt açıkken dosya boyutu maksimum <strong>150 KB</strong> tavanını aşmayacak şekilde en yüksek kalitede tutulur.
+          </div>
+        </div>
+
+        <div class="field-group" data-title="Vesikalık (yüz ortalama)">
+          <div class="field toggle-field">
+            <span>Yüzü bul ve ortala</span>
+            <label class="switch" title="Yüz algılama">
+              <input type="checkbox" id="sFace" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="field">
+            <label for="sHead">Yüz oranı <em class="val" id="sHeadVal">0.65</em></label>
+            <input type="range" id="sHead" min="0.2" max="0.95" step="0.01" value="0.65">
+          </div>
+          <div class="field">
+            <label for="sVoff">Tepe boşluğu <em class="val" id="sVoffVal">0.10</em></label>
+            <input type="range" id="sVoff" min="0" max="0.4" step="0.01" value="0.10">
+          </div>
+          <div class="field">
+            <label for="sSmooth">Yumuşatma <em class="val" id="sSmoothVal">0.30</em></label>
+            <input type="range" id="sSmooth" min="0.05" max="1" step="0.01" value="0.30">
+          </div>
+          <div class="field">
+            <label for="sZoom">Kadraj Yakınlaştırma <em class="val" id="sZoomVal">1.0x</em></label>
+            <input type="range" id="sZoom" min="0.5" max="2.5" step="0.05" value="1.0">
+          </div>
+          <div class="field">
+            <label for="sEvery">Yüz bulma sıklığı (kare sayısı) <em class="val" id="sEveryVal">3 kare (Önerilen)</em></label>
+            <div class="combine">
+              <input type="range" id="sEvery" min="1" max="30" step="1" value="3" style="flex: 1;">
+              <input type="number" id="sEveryNum" min="1" max="60" step="1" value="3" style="width: 70px;">
+            </div>
+            <span class="field-hint" style="font-size: 11px; color: var(--text-3); margin-top: 4px; display: block;">
+              1 = Her karede anlık arama (ultra akıcı). 3 = Önerilen dengeli mod. 6+ = Düşük işlemci kullanımı.
+            </span>
+          </div>
+        </div>
+
+      </div>
+      <div class="sheet-actions">
+        <button class="btn btn-ghost" id="sCancel">Vazgeç</button>
+        <button class="btn btn-primary" id="sSave">Uygula ve Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast hidden" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>

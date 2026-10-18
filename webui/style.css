@@ -1,0 +1,1309 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Webcam Capture — macOS Sonoma / Sequoia Native Aesthetics
+   SF Pro Display & Text, Frosted Glass (Vibrancy), Squircle Geometries,
+   Apple Camera Shutter & Precision Biometric Viewfinder.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Renk Paleti - Light Mode */
+  --app-bg: #ececf0;
+  --toolbar-bg: rgba(246, 246, 248, 0.78);
+  --sidebar-bg: rgba(255, 255, 255, 0.65);
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --card-bg-solid: #ffffff;
+  --card-inner: rgba(0, 0, 0, 0.03);
+  --stage-bg: #0d0e12;
+  --text: #1d1d1f;
+  --text-2: #6e6e73;
+  --text-3: #86868b;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-light: rgba(255, 255, 255, 0.7);
+  --border-b: rgba(0, 0, 0, 0.12);
+  --hover: rgba(0, 0, 0, 0.05);
+  --active: rgba(0, 0, 0, 0.09);
+  
+  /* Apple Sistem Vurgu Renkleri */
+  --accent: #007aff;
+  --accent-hover: #0062cc;
+  --accent-glow: rgba(0, 122, 255, 0.35);
+  --green: #34c759;
+  --orange: #ff9500;
+  --red: #ff3b30;
+  
+  /* Gölgeler & Cam Efekti */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.03);
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.05);
+  --glass-blur: saturate(190%) blur(28px);
+  --glass-blur-sm: saturate(180%) blur(16px);
+  
+  --switch-off: #e5e5ea;
+  --input-bg: #ffffff;
+  --overlay: rgba(0, 0, 0, 0.36);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-pill: 9999px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Renk Paleti - Dark Mode (macOS Sequoia Dark) */
+    --app-bg: #161618;
+    --toolbar-bg: rgba(30, 30, 34, 0.75);
+    --sidebar-bg: rgba(26, 26, 30, 0.6);
+    --card-bg: rgba(38, 38, 43, 0.72);
+    --card-bg-solid: #26262b;
+    --card-inner: rgba(255, 255, 255, 0.04);
+    --stage-bg: #08080a;
+    --text: #f5f5f7;
+    --text-2: #a1a1a6;
+    --text-3: #6e6e73;
+    --border: rgba(255, 255, 255, 0.09);
+    --border-light: rgba(255, 255, 255, 0.12);
+    --border-b: rgba(255, 255, 255, 0.14);
+    --hover: rgba(255, 255, 255, 0.08);
+    --active: rgba(255, 255, 255, 0.13);
+    
+    --accent: #0a84ff;
+    --accent-hover: #2997ff;
+    --accent-glow: rgba(10, 132, 255, 0.4);
+    --green: #30d158;
+    --orange: #ff9f0a;
+    --red: #ff453a;
+    
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-card: 0 6px 22px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-pop: 0 18px 44px rgba(0, 0, 0, 0.65), 0 2px 8px rgba(0, 0, 0, 0.4);
+    
+    --switch-off: #39393d;
+    --input-bg: #1c1c1e;
+    --overlay: rgba(0, 0, 0, 0.6);
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--app-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  cursor: default;
+}
+
+.hidden { display: none !important; }
+.visible { opacity: 1 !important; }
+
+/* ─────────────────────────── Ana Düzen ─────────────────────────── */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+  background: var(--app-bg);
+}
+
+/* ─────────────────────────── macOS Araç Çubuğu / Başlık ─────────────────────────── */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 18px;
+  background: var(--toolbar-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 0.5px solid var(--border-b);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  flex: 0 0 auto;
+  z-index: 20;
+}
+
+.toolbar-left, .toolbar-center, .toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* macOS Trafik Işıkları (Close, Minimize, Expand) */
+.macos-traffic-lights {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+}
+
+.traffic-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15);
+}
+
+.traffic-dot:hover {
+  transform: scale(1.08);
+}
+
+.dot-close { background: #ff5f56; }
+.dot-minimize { background: #ffbd2e; }
+.dot-zoom { background: #27c93f; }
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  background: #000;
+}
+
+.app-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.app-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+
+.app-subtitle {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-2);
+}
+
+/* macOS Segmented Switch (Başlat / Durdur) */
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  background: var(--card-inner);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.seg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: inherit;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.seg-btn:hover {
+  color: var(--text);
+}
+
+.seg-btn.active-side, .seg-btn.on {
+  background: var(--card-bg-solid);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.seg-btn[data-side="start"].active-side,
+.seg-btn[data-side="start"].on {
+  color: var(--green);
+}
+
+.seg-btn[data-side="stop"].active-side {
+  color: var(--red);
+}
+
+/* Toolbar Butonları */
+.tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 0.5px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: inherit;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+}
+
+.tool-btn:hover {
+  background: var(--hover);
+  border-color: var(--border-b);
+  transform: translateY(-0.5px);
+}
+
+.tool-btn:active {
+  transform: translateY(0.5px);
+  background: var(--active);
+}
+
+/* ─────────────────────────── İçerik Alanı ─────────────────────────── */
+
+.content {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 16px;
+  padding: 16px;
+  overflow: hidden;
+  background: var(--app-bg);
+}
+
+/* ─────────────────────────── Sol Panel: Canlı Kamera ─────────────────────────── */
+
+.live-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  height: 100%;
+}
+
+.pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.pane-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pane-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+/* VisionOS / Sonoma Tarzı Canlı Durum Hapı */
+.live-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  background: rgba(52, 199, 89, 0.14);
+  border: 0.5px solid rgba(52, 199, 89, 0.35);
+  border-radius: var(--radius-pill);
+}
+
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: pulse-dot 1.6s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.pill-text {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--green);
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--card-inner);
+  color: var(--text-3);
+  border: 0.5px solid var(--border);
+}
+
+.badge.on {
+  background: rgba(52, 199, 89, 0.12);
+  color: var(--green);
+  border-color: rgba(52, 199, 89, 0.3);
+}
+
+.badge.accent {
+  background: rgba(0, 122, 255, 0.12);
+  color: var(--accent);
+  border-color: rgba(0, 122, 255, 0.25);
+  font-weight: 600;
+}
+
+/* Canlı Kamera Sahnesi (Viewfinder) */
+.live-stage {
+  flex: 1 1 auto;
+  position: relative;
+  background: var(--stage-bg);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6), var(--shadow-card);
+}
+
+.live-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Stüdyo Vizör Köşebentleri */
+.viewfinder-corners {
+  position: absolute;
+  inset: 16px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.vf-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+}
+
+.vf-tl { top: 0; left: 0; border-right: none; border-bottom: none; border-top-left-radius: 4px; }
+.vf-tr { top: 0; right: 0; border-left: none; border-bottom: none; border-top-right-radius: 4px; }
+.vf-bl { bottom: 0; left: 0; border-right: none; border-top: none; border-bottom-left-radius: 4px; }
+.vf-br { bottom: 0; right: 0; border-left: none; border-top: none; border-bottom-right-radius: 4px; }
+
+/* Fotoğraf Flaş Efekti */
+.camera-flash {
+  position: absolute;
+  inset: 0;
+  background: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 50;
+  transition: opacity 0.08s ease-out;
+}
+
+.camera-flash.flash-active {
+  opacity: 0.95;
+}
+
+/* Kamera Kapalı Durumu */
+.live-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-3);
+  text-align: center;
+}
+
+.empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.empty-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.empty-sub {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* Sarı Çerçeve Yakınlaştırma Çubuğu */
+.zoom-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  background: var(--card-bg);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  backdrop-filter: var(--glass-blur-sm);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.zoom-label-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  max-width: 320px;
+}
+
+.zoom-btn {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 0.5px solid var(--border);
+  background: var(--card-inner);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.zoom-btn:hover {
+  background: var(--hover);
+}
+
+.zoom-slider-container {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 0.5px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.zoom-badge-btn {
+  border: none;
+  background: var(--card-inner);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.zoom-hint {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* Yüz Takibi ve Algılama Sıklığı Çubuğu */
+.face-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  background: var(--card-bg);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  backdrop-filter: var(--glass-blur-sm);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+}
+
+.face-toggle-group {
+  display: flex;
+  align-items: center;
+}
+
+.face-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 0.5px solid var(--border);
+  background: var(--card-inner);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.face-toggle-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.face-toggle-btn.active {
+  background: rgba(48, 209, 88, 0.14);
+  border-color: rgba(48, 209, 88, 0.35);
+  color: var(--green);
+}
+
+.face-freq-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.freq-label {
+  font-size: 11.5px;
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.freq-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--card-inner);
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 4px;
+}
+
+.freq-btn {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.freq-btn:hover {
+  background: var(--hover);
+}
+
+.freq-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  padding: 0 4px;
+  min-width: 82px;
+  text-align: center;
+  user-select: none;
+}
+
+.freq-chips {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.freq-chip {
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: 0.5px solid var(--border);
+  background: var(--card-inner);
+  color: var(--text-2);
+  font-size: 10.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+.freq-chip:hover {
+  color: var(--text);
+  border-color: var(--text-3);
+}
+
+.freq-chip.active {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+.pane-foot {
+  font-size: 11.5px;
+  color: var(--text-2);
+  padding: 0 4px;
+}
+
+/* ─────────────────────────── Sağ Panel: Hedef & Kontroller ─────────────────────────── */
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+/* Kart Stili (Apple Squircle Card) */
+.card {
+  background: var(--card-bg);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  backdrop-filter: var(--glass-blur-sm);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  box-shadow: var(--shadow-card);
+}
+
+/* Hedef Vesikalık Kartı */
+.target-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.pane-head-split {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pane-head-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-popout {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border: 0.5px solid var(--border);
+  background: var(--card-inner);
+  color: var(--text-2);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.btn-popout:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* 35x45 mm Oranlı Hedef Çerçeve Sahnesi */
+.target-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  width: 100%;
+}
+
+.target-frame-box {
+  width: 140px;
+  height: 180px;
+  position: relative;
+  background: #ffffff;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.target-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.target-empty {
+  position: absolute;
+  color: var(--text-3);
+  font-size: 13px;
+  display: none;
+}
+
+.target-guide-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.bio-guide-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed rgba(255, 215, 0, 0.7);
+}
+
+.bio-crown { top: 12%; border-color: rgba(255, 215, 0, 0.8); }
+.bio-eyes  { top: 40%; border-color: rgba(0, 195, 255, 0.8); }
+.bio-chin  { top: 78%; border-color: rgba(255, 215, 0, 0.8); }
+
+.target-specs {
+  display: flex;
+  gap: 6px;
+}
+
+.spec-tag {
+  font-size: 10.5px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--card-inner);
+  color: var(--text-2);
+}
+
+.spec-tag.highlight {
+  background: rgba(52, 199, 89, 0.12);
+  color: var(--green);
+  font-weight: 600;
+}
+
+/* Dosya Adı Giriş Kartı */
+.name-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.name-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.name-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.name-card-hint {
+  font-size: 10.5px;
+  color: var(--text-3);
+}
+
+.name-input-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  transition: all 0.15s ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.name-input-group:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.name-input {
+  flex: 1 1 auto;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 12.5px;
+  font-family: inherit;
+  outline: none;
+}
+
+.name-ext-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  padding: 1px 5px;
+  background: var(--card-inner);
+  border-radius: 4px;
+}
+
+.name-clear-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 2px;
+}
+
+.name-clear-btn:hover {
+  color: var(--text);
+}
+
+/* ─────────────────────────── İkonik Apple Kamera Deklanşör Butonu ─────────────────────────── */
+
+.capture-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 18px;
+  background: linear-gradient(180deg, #0a84ff 0%, #0066d6 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 122, 255, 0.38), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.capture-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 122, 255, 0.48), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+}
+
+.capture-btn:active, .capture-btn.flash {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+}
+
+/* Apple Shutter Circle */
+.shutter-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.shutter-inner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: transform 0.1s ease;
+}
+
+.capture-btn:active .shutter-inner,
+.capture-btn.flash .shutter-inner {
+  transform: scale(0.7);
+}
+
+.capture-hint {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: -6px;
+}
+
+kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--text-2);
+  background: var(--card-bg);
+  border: 0.5px solid var(--border-b);
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+}
+
+/* Otomatik Yakalama & Bilgi Kartları */
+.auto-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toggle-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* Apple Tarzı Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 22px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--switch-off);
+  transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 22px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+input:checked + .slider {
+  background-color: var(--green);
+}
+
+input:checked + .slider:before {
+  transform: translateX(16px);
+}
+
+.auto-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.auto-row input[type="number"] {
+  width: 54px;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+  text-align: center;
+}
+
+.info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.info-row .strong {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.info-row .file {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  font-size: 11px;
+  color: var(--text-3);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────── Durum Çubuğu (Footer) ─────────────────────────── */
+
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: var(--toolbar-bg);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+  backdrop-filter: var(--glass-blur-sm);
+  border-top: 0.5px solid var(--border-b);
+  font-size: 11.5px;
+  color: var(--text-2);
+  flex: 0 0 auto;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+
+.status-dot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.status-dot.warn { background: var(--orange); }
+.status-dot.err { background: var(--red); }
+
+.status-text {
+  flex: 1 1 auto;
+}
+
+.status-right {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* ─────────────────────────── macOS Ayarlar Çarşafı (Sheet Modal) ─────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  transition: opacity 0.2s ease;
+}
+
+.sheet {
+  width: 90%;
+  max-width: 520px;
+  max-height: 85vh;
+  background: var(--card-bg-solid);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: sheet-enter 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sheet-enter {
+  from { opacity: 0; transform: translateY(-16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.sheet-title {
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  border-bottom: 0.5px solid var(--border);
+  color: var(--text);
+  background: var(--card-inner);
+}
+
+.sheet-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field-group:before {
+  content: attr(data-title);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+  margin-bottom: 2px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.field label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  display: flex;
+  justify-content: space-between;
+}
+
+.field select, .field input[type="text"], .field input[type="number"] {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 12.5px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.field select:focus, .field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field-note {
+  font-size: 11.5px;
+  color: var(--text-2);
+  line-height: 1.4;
+  background: var(--card-inner);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--accent);
+}
+
+.sheet-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 0.5px solid var(--border);
+  background: var(--card-inner);
+}
+
+.btn {
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.btn-ghost {
+  border: 0.5px solid var(--border);
+  background: var(--card-bg-solid);
+  color: var(--text);
+}
+
+.btn-ghost:hover {
+  background: var(--hover);
+}
+
+.btn-primary {
+  border: none;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 122, 255, 0.3);
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+/* Toast Bildirimi */
+.toast {
+  position: fixed;
+  bottom: 34px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(28, 28, 30, 0.92);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: var(--radius-pill);
+  font-size: 12.5px;
+  font-weight: 500;
+  box-shadow: var(--shadow-pop);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 200;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

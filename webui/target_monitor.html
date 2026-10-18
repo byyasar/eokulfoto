@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hedef Önizleme — İkinci Monitör</title>
+  <style>
+    :root {
+      --bg: #0c0c0e;
+      --card-bg: #141418;
+      --toolbar-bg: rgba(20, 20, 24, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-accent: #f5a623;
+      --accent: #007aff;
+      --green: #30d158;
+      --orange: #ff9f0a;
+      --guide: rgba(0, 215, 255, 0.75);
+      --text: #f5f5f7;
+      --text-muted: #8e8e93;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ─── Araç Çubuğu ─── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 16px;
+      background: var(--toolbar-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      flex: 0 0 auto;
+      z-index: 10;
+    }
+
+    .toolbar-left, .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(48, 209, 88, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(48, 209, 88, 0.3);
+    }
+    .live-badge.off {
+      background: rgba(255, 69, 58, 0.15);
+      color: #ff453a;
+      border-color: rgba(255, 69, 58, 0.3);
+    }
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+      animation: pulse 1.6s infinite ease-in-out;
+    }
+    .live-badge.off .pulse-dot {
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(0.85); }
+    }
+
+    .spec-badge {
+      font-size: 12px;
+      font-weight: 600;
+      color: #d1d1d6;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .btn:active {
+      transform: scale(0.97);
+    }
+    .btn.active {
+      background: rgba(0, 122, 255, 0.25);
+      border-color: var(--accent);
+      color: #64d2ff;
+    }
+    .btn-capture {
+      background: linear-gradient(180deg, #ff9f0a 0%, #f5a623 100%);
+      color: #000;
+      border: none;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(245, 166, 35, 0.4);
+    }
+    .btn-capture:hover {
+      background: linear-gradient(180deg, #ffb340 0%, #ff9f0a 100%);
+      box-shadow: 0 3px 12px rgba(245, 166, 35, 0.6);
+    }
+
+    /* ─── Ana Sahne ─── */
+    .stage {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 24px;
+      background: radial-gradient(circle at center, #181820 0%, #0c0c0e 75%);
+      overflow: hidden;
+    }
+
+    .target-wrapper {
+      position: relative;
+      /* 35x45 biyometrik orantı */
+      aspect-ratio: 133 / 171;
+      height: min(78vh, 620px);
+      max-width: 90vw;
+      border-radius: 14px;
+      border: 3px solid var(--border-accent);
+      box-shadow: 0 8px 36px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(245, 166, 35, 0.3);
+      overflow: hidden;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .target-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: pixelated;
+    }
+    .target-image.smooth {
+      image-rendering: auto;
+    }
+
+    /* Biyometrik Kılavuzlar */
+    .guides-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .guides-overlay.hidden {
+      display: none;
+    }
+
+    .guide-line {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      border-bottom: 1.5px dashed var(--guide);
+    }
+    .guide-line.crown {
+      top: 14%;
+    }
+    .guide-line.crown::after {
+      content: "BAŞ TEPESİ (KILAVUZ)";
+      position: absolute;
+      right: 4px;
+      bottom: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--guide);
+      opacity: 0.8;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    }
+
+    .guide-line.eyes {
+      top: 42%;
+      border-bottom: 2px dashed rgba(0, 215, 255, 0.9);
+    }
+    .guide-line.eyes::after {
+      content: "GÖZ HİZASI";
+      position: absolute;
+      right: 4px;
+      bottom: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: rgba(0, 215, 255, 0.95);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    }
+
+    .guide-line.chin {
+      top: 75%;
+    }
+    .guide-line.chin::after {
+      content: "ÇENE ALTI";
+      position: absolute;
+      right: 4px;
+      bottom: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--guide);
+      opacity: 0.8;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Orta dikey eksen */
+    .guide-axis {
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      left: 50%;
+      border-left: 1px dotted rgba(255, 255, 255, 0.25);
+    }
+
+    /* Kamera kapalı veya boş durum */
+    .empty-state {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: #111116;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 20px;
+    }
+    .empty-state.hidden {
+      display: none;
+    }
+    .empty-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      display: grid;
+      place-items: center;
+      color: var(--text-muted);
+    }
+
+    /* Flaş efekti */
+    .flash-overlay {
+      position: fixed;
+      inset: 0;
+      background: #ffffff;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 100;
+      transition: opacity 0.05s ease-out;
+    }
+    .flash-overlay.flashing {
+      opacity: 0.8;
+      transition: none;
+    }
+
+    /* ─── Alt Durum Çubuğu ─── */
+    .statusbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: var(--toolbar-bg);
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-muted);
+      flex: 0 0 auto;
+      z-index: 10;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .status-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-highlight {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .shortcuts-hint {
+      display: flex;
+      gap: 12px;
+      color: #636366;
+    }
+    .kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 10px;
+      color: #aeaeb2;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Üst Araç Çubuğu -->
+  <header class="toolbar">
+    <div class="toolbar-left">
+      <div class="live-badge" id="liveBadge">
+        <span class="pulse-dot"></span>
+        <span id="liveText">CANLI</span>
+      </div>
+      <span class="spec-badge" id="specLabel">133 × 171 px · 35 × 45 mm</span>
+      <span class="spec-badge" style="color: #ff9f0a; border-color: rgba(255, 159, 10, 0.3);">e-Devlet Uyumlu</span>
+    </div>
+
+    <div class="toolbar-right">
+      <button type="button" class="btn active" id="btnToggleGuides" title="Biyometrik kılavuz çizgilerini aç/kapat (G)">
+        <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor">
+          <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h11A1.5 1.5 0 0 1 15 2.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 13.5v-11zM2.5 2a.5.5 0 0 0-.5.5v11a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5v-11a.5.5 0 0 0-.5-.5h-11z"/>
+          <path d="M1 5.5h14M1 10.5h14M8 1v14" stroke="currentColor" stroke-width="0.8"/>
+        </svg>
+        <span>Kılavuzlar</span>
+      </button>
+
+      <button type="button" class="btn" id="btnTogglePixel" title="Piksel netliği / Yumuşatma (P)">
+        <span>Piksel: Net</span>
+      </button>
+
+      <button type="button" class="btn btn-capture" id="btnCapture" title="Fotoğraf Çek (SPACE)">
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+          <path d="M10.5 8.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+          <path d="M2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4H2zm.5 2a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1zm9 2.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z"/>
+        </svg>
+        <span>Fotoğraf Çek</span>
+      </button>
+
+      <button type="button" class="btn" id="btnFullscreen" title="Tam Ekran (F)">
+        <svg viewBox="0 0 16 16" width="13" height="13" fill="currentColor" id="fsIcon">
+          <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 1 0V2h3.5a.5.5 0 0 0 0-1h-4zm13 0a.5.5 0 0 0-.5.5H10.5a.5.5 0 0 0 0 1H14v3.5a.5.5 0 0 0 1 0v-4a.5.5 0 0 0-.5-.5zm0 14a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-1 0V14h-3.5a.5.5 0 0 0 0 1h4zm-13 0a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H2v-3.5a.5.5 0 0 0-1 0v4z"/>
+        </svg>
+        <span id="fsText">Tam Ekran</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sahne (Canlı Hedef Görüntü) -->
+  <main class="stage">
+    <div class="target-wrapper" id="targetWrapper">
+      <img id="targetImg" class="target-image" alt="Biyometrik Hedef">
+      
+      <!-- Kılavuz Çizgileri -->
+      <div class="guides-overlay" id="guidesOverlay">
+        <div class="guide-line crown"></div>
+        <div class="guide-line eyes"></div>
+        <div class="guide-line chin"></div>
+        <div class="guide-axis"></div>
+      </div>
+
+      <!-- Kamera Kapalı Durumu -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 7h11v10H3z"/><path d="M14 10l5-2v8l-5-2"/>
+          </svg>
+        </div>
+        <div style="font-weight: 500; color: #aeaeb2;">Kamera Kapalı</div>
+        <div style="font-size: 11px;">Ana pencereden kamerayı başlatın</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Flaş Animasyon Katmanı -->
+  <div class="flash-overlay" id="flashOverlay"></div>
+
+  <!-- Alt Durum Çubuğu -->
+  <footer class="statusbar">
+    <div class="status-left">
+      <div class="status-item">
+        <span>Yüz:</span>
+        <span class="status-highlight" id="faceStatus">—</span>
+      </div>
+      <div class="status-item">
+        <span>Kayıt:</span>
+        <span class="status-highlight" id="countStatus">0 adet</span>
+      </div>
+      <div class="status-item" id="lastFileItem" style="display: none;">
+        <span>Son kayıt:</span>
+        <span class="status-highlight" id="lastFileStatus">—</span>
+      </div>
+    </div>
+
+    <div class="shortcuts-hint">
+      <span><span class="kbd">SPACE</span> Çekim</span>
+      <span><span class="kbd">F</span> Tam Ekran</span>
+      <span><span class="kbd">G</span> Kılavuzlar</span>
+      <span><span class="kbd">ESC</span> Çıkış</span>
+    </div>
+  </footer>
+
+  <script>
+    (function() {
+      const $ = (id) => document.getElementById(id);
+
+      const targetImg = $("targetImg");
+      const emptyState = $("emptyState");
+      const guidesOverlay = $("guidesOverlay");
+      const liveBadge = $("liveBadge");
+      const liveText = $("liveText");
+      const faceStatus = $("faceStatus");
+      const countStatus = $("countStatus");
+      const lastFileItem = $("lastFileItem");
+      const lastFileStatus = $("lastFileStatus");
+      const flashOverlay = $("flashOverlay");
+
+      const btnToggleGuides = $("btnToggleGuides");
+      const btnTogglePixel = $("btnTogglePixel");
+      const btnCapture = $("btnCapture");
+      const btnFullscreen = $("btnFullscreen");
+      const fsText = $("fsText");
+
+      let guidesVisible = true;
+      let isPixelated = true;
+      let pollingTimer = null;
+      let isCapturing = false;
+
+      // ─── Kılavuzları Aç/Kapat ───
+      function toggleGuides() {
+        guidesVisible = !guidesVisible;
+        guidesOverlay.classList.toggle("hidden", !guidesVisible);
+        btnToggleGuides.classList.toggle("active", guidesVisible);
+      }
+      btnToggleGuides.addEventListener("click", toggleGuides);
+
+      // ─── Pikselleştirme / Yumuşatma ───
+      function toggleSmoothing() {
+        isPixelated = !isPixelated;
+        targetImg.classList.toggle("smooth", !isPixelated);
+        btnTogglePixel.querySelector("span").textContent = isPixelated ? "Piksel: Net" : "Piksel: Yumuşak";
+        btnTogglePixel.classList.toggle("active", !isPixelated);
+      }
+      btnTogglePixel.addEventListener("click", toggleSmoothing);
+
+      // ─── Tam Ekran Modu ───
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+      btnFullscreen.addEventListener("click", toggleFullscreen);
+      document.addEventListener("fullscreenchange", () => {
+        const isFs = !!document.fullscreenElement;
+        fsText.textContent = isFs ? "Pencereye Dön" : "Tam Ekran";
+        btnFullscreen.classList.toggle("active", isFs);
+      });
+
+      // ─── Fotoğraf Çekme (Flaş ve Ses Efekti) ───
+      function flashEffect() {
+        flashOverlay.classList.add("flashing");
+        setTimeout(() => {
+          flashOverlay.classList.remove("flashing");
+        }, 120);
+      }
+
+      async function triggerCapture() {
+        if (isCapturing) return;
+        if (!window.pywebview || !window.pywebview.api) return;
+
+        isCapturing = true;
+        flashEffect();
+
+        try {
+          const res = await window.pywebview.api.capture_now("");
+          if (res && res.ok) {
+            countStatus.textContent = res.count + " adet";
+            lastFileItem.style.display = "inline-flex";
+            lastFileStatus.textContent = res.name + " (" + res.size_kb + " KB)";
+          }
+        } catch (err) {
+          console.error("Yakalama hatası:", err);
+        } finally {
+          setTimeout(() => { isCapturing = false; }, 300);
+        }
+      }
+      btnCapture.addEventListener("click", triggerCapture);
+
+      // ─── Klavye Kısayolları ───
+      window.addEventListener("keydown", (e) => {
+        if (e.code === "Space" || e.code === "Enter") {
+          e.preventDefault();
+          triggerCapture();
+        } else if (e.key === "f" || e.key === "F") {
+          toggleFullscreen();
+        } else if (e.key === "g" || e.key === "G") {
+          toggleGuides();
+        } else if (e.key === "p" || e.key === "P") {
+          toggleSmoothing();
+        }
+      });
+
+      // ─── Canlı Görüntü Döngüsü ───
+      let tickBusy = false;
+      async function tick() {
+        if (!window.pywebview || !window.pywebview.api) {
+          pollingTimer = setTimeout(tick, 100);
+          return;
+        }
+
+        if (!tickBusy) {
+          tickBusy = true;
+          try {
+            const data = await window.pywebview.api.get_target_snapshot();
+            if (data) {
+              const isRunning = !!data.running;
+              liveBadge.classList.toggle("off", !isRunning);
+              liveText.textContent = isRunning ? "CANLI" : "KAPALI";
+
+              if (data.target && isRunning) {
+                const mime = data.target.startsWith("/9j/") ? "image/jpeg" : "image/png";
+                targetImg.src = `data:${mime};base64,` + data.target;
+                emptyState.classList.add("hidden");
+              } else {
+                emptyState.classList.remove("hidden");
+              }
+
+              // Durumlar
+              if (data.face) {
+                faceStatus.textContent = "Ortalandı (" + (data.box_size || "—") + ")";
+                faceStatus.style.color = "var(--green)";
+              } else if (isRunning) {
+                faceStatus.textContent = "Merkezi kadraj";
+                faceStatus.style.color = "var(--orange)";
+              } else {
+                faceStatus.textContent = "Kamera kapalı";
+                faceStatus.style.color = "var(--text-muted)";
+              }
+
+              if (data.count !== undefined) {
+                countStatus.textContent = data.count + " adet";
+              }
+              if (data.last_name) {
+                lastFileItem.style.display = "inline-flex";
+                lastFileStatus.textContent = data.last_name;
+              }
+            }
+          } catch (err) {
+            // pencere kapanırken sessizce geç
+          } finally {
+            tickBusy = false;
+          }
+        }
+
+        pollingTimer = setTimeout(tick, 45); // ~22 FPS akıcı ve verimli
+      }
+
+      window.addEventListener("pywebviewready", () => {
+        tick();
+      });
+
+      // Eğer pywebviewready tetiklenmediyse yine de başlat
+      setTimeout(tick, 300);
+    })();
+  </script>
+</body>
+</html>

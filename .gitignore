@@ -1,0 +1,13 @@
+/target/
+.venv/
+captures/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+build/
+dist/
+*.exe
+app.res
+*.log
+run.log
